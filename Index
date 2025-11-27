@@ -1,0 +1,2300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UbuntuEduAI</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0b1220;--panel:#0f1a2e;--panel2:#14213d;--border:rgba(255,255,255,.08);
+      --text:rgba(255,255,255,.92);--muted:rgba(255,255,255,.68);--faint:rgba(255,255,255,.48);
+      --accent:#6aa6ff;--accent2:#7c5cff;--good:#22c55e;--bad:#ef4444;
+      --shadow:0 10px 30px rgba(0,0,0,.35);--r:14px;--r2:18px;
+    }
+    body.light{--bg:#fff;--panel:#f6f7fb;--panel2:#fff;--border:rgba(17,24,39,.10);--text:rgba(17,24,39,.92);--muted:rgba(17,24,39,.68);--faint:rgba(17,24,39,.5);--shadow:0 10px 30px rgba(17,24,39,.1)}
+    body.gray{--bg:#111827;--panel:#0f172a;--panel2:#111b33;--border:rgba(255,255,255,.08);--text:rgba(255,255,255,.92);--muted:rgba(255,255,255,.68);--faint:rgba(255,255,255,.45)}
+    body.hc{--bg:#000;--panel:#0b0b0b;--panel2:#111;--border:rgba(255,255,255,.2);--text:rgba(255,255,255,.98);--muted:rgba(255,255,255,.9);--faint:rgba(255,255,255,.85);--accent:#00d4ff;--accent2:#ff5cff;--shadow:none}
+    body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;transition:background .2s ease,color .2s ease}
+    body.large{font-size:18px}
+    body.reduce *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+
+    :focus-visible{outline:3px solid rgba(106,166,255,.35);outline-offset:3px;border-radius:12px}
+
+    .skip{position:absolute;left:12px;top:12px;transform:translateY(-200%);background:var(--panel);color:var(--text);border:1px solid var(--border);padding:10px 12px;border-radius:12px;z-index:999}
+    .skip:focus{transform:translateY(0)}
+
+    .app{display:flex;height:100vh;width:100%}
+
+    /* LEFT SIDEBAR */
+    .left{width:340px;min-width:290px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column}
+    .leftTop{padding:18px;border-bottom:1px solid var(--border)}
+    .brand{display:flex;flex-direction:column;gap:6px}
+    .brandName{font-weight:800;font-size:16px;letter-spacing:.2px}
+    .brandDesc{font-size:12px;color:var(--faint);line-height:1.45}
+    .newBtn{margin-top:14px;width:100%;height:42px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:900;cursor:pointer;transition:transform .12s ease,filter .12s ease}
+    .newBtn:hover{transform:translateY(-1px);filter:brightness(1.03)}
+
+    /* Collapsible sidebar */
+    .left.collapsed{width:72px!important;min-width:72px!important}
+    .left.collapsed .brandDesc,
+    .left.collapsed .newBtn,
+    .left.collapsed .quick,
+    .left.collapsed .convList,
+    .left.collapsed .leftBottom .tiny{display:none!important}
+    .left.collapsed .leftTop{padding:14px}
+    .left.collapsed .brandName{font-size:14px}
+    .left.collapsed .leftBottom{justify-content:center}
+
+    /* QUICK ACCESS */
+    .quick{padding:12px 14px;border-bottom:1px solid var(--border)}
+    .quickTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .quickTitle .t{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);font-weight:800}
+    .pillBtn, .chipBtn, .chipSel{
+      height:36px;padding:0 12px;border-radius:12px;border:1px solid var(--border);
+      background:rgba(255,255,255,.03);color:var(--text);cursor:pointer;font-size:13px
+    }
+    .pillBtn:hover,.chipBtn:hover,.chipSel:hover{background:rgba(255,255,255,.05);border-color:rgba(106,166,255,.28)}
+    .pillBtn.primary{border-color:rgba(106,166,255,.35);background:rgba(106,166,255,.10)}
+    details{border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.02);padding:10px 10px}
+    summary{cursor:pointer;list-style:none;font-weight:850;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+    summary::-webkit-details-marker{display:none}
+    .summarySub{font-size:11px;color:var(--faint);font-weight:650;margin-top:4px}
+    .toolGrid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+    .toolAction{
+      width:100%;text-align:left;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);
+      padding:10px 12px;border-radius:12px;cursor:pointer;transition:background .12s ease,border-color .12s ease;font-size:13px;line-height:1.35
+    }
+    .toolAction:hover{background:rgba(255,255,255,.05);border-color:rgba(106,166,255,.28)}
+    .toolAction .sub{display:block;margin-top:3px;font-size:11px;color:var(--faint)}
+
+    .convList{padding:12px 10px;overflow:auto;flex:1}
+    .conv{padding:12px;border-radius:12px;border:1px solid transparent;cursor:pointer;transition:background .12s ease,border-color .12s ease;color:var(--muted);margin-bottom:8px}
+    .conv:hover{background:var(--panel2);border-color:var(--border);color:var(--text)}
+    .conv.active{background:var(--panel2);border-color:rgba(106,166,255,.35);color:var(--text)}
+    .convTitle{font-weight:750;color:var(--text);font-size:13px;margin-bottom:4px}
+    .convSnip{font-size:12px;color:var(--faint)}
+
+    .leftBottom{padding:14px 18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .tiny{font-size:12px;color:var(--faint)}
+
+    /* MAIN */
+    .main{flex:1;min-width:0;display:flex;flex-direction:column}
+    .topbar{height:62px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 16px}
+    .leftGroup{display:flex;align-items:center;gap:10px;min-width:0}
+    .title{font-weight:850;font-size:14px;white-space:nowrap}
+    .status{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.02);font-size:12px;color:var(--muted)}
+    .dot{width:8px;height:8px;border-radius:999px;background:var(--bad);box-shadow:0 0 0 3px rgba(239,68,68,.18)}
+    .dot.ok{background:var(--good);box-shadow:0 0 0 3px rgba(34,197,94,.18)}
+    .rightGroup{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .chipSel{max-width:260px}
+    .badge{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.02);font-size:12px;color:var(--muted)}
+
+    .drawerBtn{
+      height:36px;width:36px;border-radius:12px;border:1px solid var(--border);
+      background:rgba(255,255,255,.03);color:var(--text);cursor:pointer;font-size:16px;display:none;
+      align-items:center;justify-content:center
+    }
+
+    .messages{flex:1;overflow:auto;padding:18px 22px 22px}
+    .welcome{max-width:980px;margin:0 auto;padding:22px;border:1px solid var(--border);border-radius:var(--r2);background:rgba(255,255,255,.02)}
+    .welcome h1{font-size:24px;letter-spacing:-.2px;margin-bottom:10px}
+    .welcome p{font-size:14px;line-height:1.65;color:var(--muted)}
+    .welcome .hint{margin-top:14px;color:var(--faint);font-size:13px}
+
+    /* LIVE / VOICE panel */
+    .livePanel{
+      max-width:980px;margin:0 auto 14px;
+      border:1px solid var(--border);border-radius:var(--r2);
+      background:rgba(255,255,255,.02);padding:14px;
+      display:flex;flex-direction:column;gap:12px
+    }
+    .liveTop{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .liveTitle{display:flex;flex-direction:column;gap:4px}
+    .liveTitle .h{font-weight:900;font-size:13px;letter-spacing:.2px}
+    .liveTitle .s{font-size:12px;color:var(--faint);line-height:1.45}
+    .liveBtns{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .liveHintRow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .micState{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;flex-wrap:wrap}
+    .micPill{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.02)}
+    .micDot{width:8px;height:8px;border-radius:999px;background:var(--bad);box-shadow:0 0 0 3px rgba(239,68,68,.18)}
+    .micDot.on{background:var(--good);box-shadow:0 0 0 3px rgba(34,197,94,.18)}
+    .liveSmall{font-size:12px;color:var(--faint);line-height:1.5}
+    .drawer{max-width:980px;margin:0 auto 16px;border:1px solid var(--border);border-radius:var(--r2);background:rgba(255,255,255,.02);padding:10px 10px}
+    .drawer summary{color:var(--muted)}
+    .captionBox{width:100%;min-height:100px;max-height:220px;overflow:auto;padding:10px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.02);color:var(--muted);font-size:12px;line-height:1.55;white-space:pre-wrap}
+
+    .msg{max-width:980px;margin:0 auto 18px;display:flex;gap:12px;align-items:flex-start}
+    .meta{width:90px;flex-shrink:0;font-size:12px;color:var(--faint);padding-top:10px;text-align:right}
+    .bubble{flex:1;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:var(--r);padding:14px;line-height:1.7;color:var(--muted);font-size:14px;overflow-wrap:anywhere}
+    .msg.user .bubble{background:rgba(106,166,255,.08);border-color:rgba(106,166,255,.20);color:var(--text)}
+    .typing{max-width:980px;margin:0 auto 18px;display:none;align-items:center;gap:10px;color:var(--faint);font-size:13px}
+    .typing.on{display:flex}
+    .dots{display:flex;gap:6px;align-items:center}
+    .d{width:7px;height:7px;border-radius:999px;background:rgba(106,166,255,.9);animation:b 1.2s infinite ease-in-out}
+    .d:nth-child(2){animation-delay:-.2s}.d:nth-child(3){animation-delay:-.4s}
+    @keyframes b{0%,80%,100%{transform:scale(0);opacity:.35}40%{transform:scale(1);opacity:1}}
+
+    .composer{border-top:1px solid var(--border);background:var(--bg);padding:14px 18px 18px}
+    .composerShell{max-width:980px;margin:0 auto;border:1px solid var(--border);background:var(--panel);border-radius:var(--r2);padding:12px}
+    .composerTools{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+    .toolRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .toggleBtn{
+      height:34px;padding:0 10px;border-radius:10px;border:1px solid var(--border);
+      background:rgba(255,255,255,.03);color:var(--muted);cursor:pointer;font-size:12px
+    }
+    .toggleBtn.on{background:rgba(106,166,255,.16);border-color:rgba(106,166,255,.28);color:var(--text)}
+    textarea{width:100%;min-height:64px;max-height:200px;resize:vertical;border:0;outline:none;background:transparent;color:var(--text);font-size:14px;line-height:1.6;padding:8px 6px}
+    textarea::placeholder{color:var(--faint)}
+    .actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+    .files{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .filePill{border:1px solid var(--border);border-radius:999px;padding:6px 10px;font-size:12px;color:var(--muted);background:rgba(255,255,255,.02);display:flex;gap:8px;align-items:center}
+    .x{border:0;background:transparent;color:var(--faint);cursor:pointer;font-size:14px;padding:0 2px}
+    .send{height:40px;padding:0 16px;border-radius:12px;border:0;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:900;cursor:pointer;transition:transform .12s ease,filter .12s ease,opacity .12s ease}
+    .send:disabled{opacity:.45;cursor:not-allowed}
+    .send:hover{transform:translateY(-1px);filter:brightness(1.03)}
+
+    /* MODALS */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);z-index:200}
+    .modal.on{display:flex}
+    .panel{width:min(940px,96vw);max-height:88vh;overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow)}
+    .pHead{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--border);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:2}
+    .pHead h2{font-size:16px;font-weight:900;letter-spacing:.2px}
+    .close{height:34px;padding:0 12px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);cursor:pointer}
+    .pBody{padding:16px 18px 20px}
+    .section{border:1px solid var(--border);border-radius:16px;padding:14px;background:rgba(255,255,255,.02);margin-bottom:14px}
+    .section h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--faint);margin-bottom:10px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{font-size:12px;color:var(--muted);font-weight:800}
+    .field input,.field select{
+      height:40px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.03);
+      color:var(--text);padding:0 12px;outline:none
+    }
+    .field input:focus,.field select:focus{border-color:rgba(106,166,255,.35)}
+    .hint{font-size:12px;color:var(--faint);line-height:1.45}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .toggleCard{
+      display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;border:1px solid var(--border);
+      background:rgba(255,255,255,.02);cursor:pointer;user-select:none;min-width:260px;flex:1
+    }
+    .switch{width:42px;height:24px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.03);position:relative;flex-shrink:0}
+    .knob{width:18px;height:18px;border-radius:999px;background:rgba(255,255,255,.75);position:absolute;top:50%;left:3px;transform:translateY(-50%);transition:left .15s ease,background .15s ease}
+    .toggleCard.on .switch{background:rgba(106,166,255,.18);border-color:rgba(106,166,255,.32)}
+    .toggleCard.on .knob{left:21px;background:#fff}
+    .save{width:100%;height:44px;border-radius:14px;border:0;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-weight:900;cursor:pointer;margin-top:8px}
+
+    /* Tables */
+    table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--border);border-radius:14px;overflow:hidden}
+    th,td{padding:10px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+    th{background:rgba(255,255,255,.03);text-align:left;font-size:12px;color:var(--muted);font-weight:900}
+    td{font-size:13px;color:var(--text)}
+    tr:last-child td{border-bottom:0}
+    .divider{height:1px;background:var(--border);margin:10px 0}
+    .videoBox{width:100%;border-radius:16px;border:1px solid var(--border);background:rgba(255,255,255,.02);overflow:hidden}
+    video{width:100%;display:block;background:#000}
+
+    /* Category action row inside chat bubbles */
+    .actionRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .actionRow .chipBtn{height:34px;border-radius:12px}
+
+    /* Mobile drawer */
+    .scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);display:none;z-index:250}
+    .scrim.on{display:block}
+
+    @media(max-width:860px){
+      .drawerBtn{display:inline-flex}
+      .left{display:flex;position:fixed;top:0;left:-360px;height:100vh;z-index:300;transition:left .2s ease;box-shadow:var(--shadow)}
+      .left.mobileOpen{left:0}
+      .grid{grid-template-columns:1fr}
+      .meta{width:70px}
+    }
+  </style>
+</head>
+
+<body>
+<a class="skip" href="#composerInput">Skip to message box</a>
+
+<div class="scrim" id="scrim" onclick="toggleMobileDrawer(false)"></div>
+
+<div class="app">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="left" id="leftPanel" aria-label="Left panel">
+    <div class="leftTop">
+      <div class="brand">
+        <div class="brandName">UbuntuEduAI</div>
+        <div class="brandDesc">Culturally responsive, context-aware education assistant for lessons, assessments, accommodations, and family support—grounded in local context.</div>
+      </div>
+      <button class="newBtn" onclick="startNewChat()">New conversation</button>
+    </div>
+
+    <!-- QUICK ACCESS (CATEGORY MENU) -->
+    <div class="quick" aria-label="Quick access categories">
+      <div class="quickTitle">
+        <div class="t">Quick access</div>
+        <button class="pillBtn" onclick="openLibrary()">Library</button>
+      </div>
+
+      <div class="summarySub" style="margin-bottom:10px">
+        Pick a category. I will give a short, narrative overview and three next-step choices.
+      </div>
+
+      <div class="toolGrid" id="categoryList" aria-label="Category list"></div>
+
+      <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="pillBtn primary" onclick="toggleVoiceMode()" id="voiceModeBtn">Voice mode</button>
+        <button class="pillBtn" onclick="openAccess()">Access</button>
+        <button class="pillBtn" onclick="openSettings()">Settings</button>
+      </div>
+    </div>
+
+    <div class="convList" id="convList" role="list" aria-label="Conversation list"></div>
+
+    <div class="leftBottom">
+      <div class="tiny" id="sessionInfo">Session: Not configured</div>
+      <button class="chipBtn" onclick="exportChat()">Export</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main" aria-label="Chat">
+    <header class="topbar">
+      <div class="leftGroup">
+        <button class="drawerBtn" id="drawerBtn" aria-label="Open sidebar" onclick="toggleMobileDrawer()">☰</button>
+        <div class="title">UbuntuEduAI</div>
+        <div class="status" aria-live="polite" title="Connection status">
+          <span class="dot" id="statusDot" aria-hidden="true"></span>
+          <span id="statusText">Not connected</span>
+        </div>
+        <span class="badge" id="voiceBadge" style="display:none">Voice mode: On</span>
+      </div>
+
+      <div class="rightGroup">
+        <button class="chipBtn" id="sidebarBtn" onclick="toggleSidebar()">⟨ Hide</button>
+
+        <select class="chipSel" id="modelSelect" aria-label="Model">
+          <optgroup label="OpenAI">
+            <option value="openai:gpt-4.1">GPT-4.1 (text)</option>
+            <option value="openai:gpt-4o-mini">GPT-4o mini (fast)</option>
+            <option value="openai:image">Image generation (OpenAI)</option>
+          </optgroup>
+          <optgroup label="Anthropic">
+            <option value="anthropic:claude-sonnet">Claude Sonnet</option>
+            <option value="anthropic:claude-opus">Claude Opus</option>
+          </optgroup>
+          <optgroup label="Google">
+            <option value="google:gemini">Gemini</option>
+          </optgroup>
+        </select>
+
+        <button class="chipBtn" onclick="toggleImageMode()" id="imageModeBtn">Image mode</button>
+        <button class="chipBtn" onclick="toggleVideoMode()" id="videoModeBtn">Video mode</button>
+        <button class="chipBtn" onclick="toggleStreaming()" id="streamModeBtn">Live mode</button>
+        <button class="chipBtn" onclick="clearChat()">Clear</button>
+        <button class="chipBtn" onclick="openSettings()">Settings</button>
+      </div>
+    </header>
+
+    <section class="messages" id="chatMessages" aria-label="Messages">
+
+      <!-- Live controls (show only when relevant) -->
+      <div class="livePanel" id="livePanel" style="display:none">
+        <div class="liveTop">
+          <div class="liveTitle">
+            <div class="h">Live controls (Voice, Dictation, Live mode, Transcripts)</div>
+            <div class="s">Speak to UbuntuEduAI, hear voice replies with natural pauses, pause/resume dictation, and view transcripts.</div>
+          </div>
+          <div class="liveBtns">
+            <button class="chipBtn" id="lpSttBtn" onclick="toggleSTT()">Dictation (STT)</button>
+            <button class="chipBtn" id="lpPauseSttBtn" onclick="toggleDictationPause()">Pause dictation</button>
+
+            <button class="chipBtn" id="lpTtsBtn" onclick="toggleTTS()">Voice replies (TTS)</button>
+            <button class="chipBtn" id="lpPauseTtsBtn" onclick="toggleVoicePause()">Pause voice</button>
+
+            <button class="chipBtn" id="lpVoiceModeBtn" onclick="toggleVoiceMode()">Voice mode loop</button>
+            <button class="chipBtn" id="lpCaptionsBtn" onclick="toggleCaptions()">Transcripts</button>
+            <button class="chipBtn" id="lpLiveBtn" onclick="toggleStreaming()">Live mode</button>
+            <button class="chipBtn" id="lpVideoBtn" onclick="toggleVideoMode()">Video mode</button>
+          </div>
+        </div>
+
+        <div class="liveHintRow">
+          <div class="micState">
+            <span class="micPill"><span class="micDot" id="micDot" aria-hidden="true"></span><span id="micText">Mic: Off</span></span>
+            <span class="micPill"><span id="ttsText">Voice replies: Off</span></span>
+            <span class="micPill"><span id="dictPauseText">Dictation: Active</span></span>
+            <span class="micPill"><span id="liveText">Live: Off</span></span>
+            <span class="micPill"><span id="videoText">Video: Off</span></span>
+          </div>
+          <div class="liveSmall">
+            Tip: In Voice mode, your speech appears in the message box. When you pause speaking, it auto-sends after your selected delay.
+          </div>
+        </div>
+      </div>
+
+      <details class="drawer" id="transcriptDrawer" style="display:none">
+        <summary>Transcripts (live dictation + assistant replies)</summary>
+        <div style="margin-top:10px">
+          <div class="captionBox" id="captionsBox" aria-live="polite"></div>
+          <div class="divider"></div>
+          <button class="toolAction" onclick="clearCaptions()">Clear transcript<span class="sub">Reset transcript panel</span></button>
+        </div>
+      </details>
+
+      <div class="welcome" id="welcomeScreen">
+        <h1>UbuntuEduAI</h1>
+        <p>
+          UbuntuEduAI is a culturally responsive, context-aware education assistant designed to support educators, learners, and families.
+          It helps you co-design lessons, build assessments and rubrics, plan accommodations and learning supports, and translate classroom evidence into targeted instructional moves.
+          For more personalized results, set your country, region/district, town/city (optional), curriculum, and language in Settings.
+        </p>
+        <p class="hint">
+          Use the Quick access categories on the left to begin (Differentiated Instruction, Neurodiversity, Multilingual, IEP/504/Access, Lesson &amp; Assessment, Communication, CRP Elements).
+        </p>
+        <p class="hint">For best voice results, use Chrome on desktop.</p>
+      </div>
+
+      <div class="typing" id="typingIndicator" aria-hidden="true">
+        <span>Working</span>
+        <span class="dots"><span class="d"></span><span class="d"></span><span class="d"></span></span>
+      </div>
+    </section>
+
+    <section class="composer" aria-label="Message composer">
+      <div class="composerShell">
+        <div class="composerTools">
+          <div class="toolRow">
+            <button class="toggleBtn" id="attachBtn" onclick="attachFile()">Attach</button>
+            <button class="toggleBtn" onclick="connectLocalFiles()">Use local context</button>
+            <span class="tiny" id="modeInfo">Mode: Text</span>
+          </div>
+          <div class="toolRow">
+            <button class="toggleBtn" onclick="openAccess()">Access</button>
+          </div>
+        </div>
+
+        <textarea id="composerInput" placeholder="Ask UbuntuEduAI..." disabled></textarea>
+
+        <div class="actions">
+          <div class="files" id="attachedFiles"></div>
+          <button class="send" id="sendBtn" onclick="sendMessage()" disabled>Send</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal" id="settingsModal" onclick="modalBackdropClose(event)">
+  <div class="panel" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="pHead">
+      <h2>Settings</h2>
+      <button class="close" onclick="closeSettings()">Close</button>
+    </div>
+    <div class="pBody">
+
+      <div class="section">
+        <h3>Teaching context</h3>
+        <div class="grid">
+          <div class="field">
+            <label for="countryInput">Country</label>
+            <input id="countryInput" type="text" placeholder="e.g., Ghana, USA, Kenya"/>
+          </div>
+
+          <div class="field">
+            <label for="stateInput">State (optional)</label>
+            <input id="stateInput" type="text" placeholder="For countries that use states (leave blank if not applicable)"/>
+          </div>
+
+          <div class="field">
+            <label for="regionInput">Region or district</label>
+            <input id="regionInput" type="text" placeholder="e.g., Greater Accra, Clarke County"/>
+          </div>
+
+          <div class="field">
+            <label for="townInput">Town or city (optional)</label>
+            <input id="townInput" type="text" placeholder="e.g., Tamale, Athens"/>
+          </div>
+
+          <div class="field">
+            <label for="curriculumSelect">Curriculum framework</label>
+            <select id="curriculumSelect">
+              <option value="">Select</option>
+              <option value="NGSS">NGSS</option>
+              <option value="CCSS">Common Core</option>
+              <option value="NaCCA">NaCCA</option>
+              <option value="Cambridge">Cambridge International</option>
+              <option value="IB">IB</option>
+              <option value="GCSE">GCSE</option>
+              <option value="CBSE">CBSE</option>
+              <option value="CBC">CBC</option>
+              <option value="Australian">Australian Curriculum</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="customCurriculumInput">Custom curriculum (if Other)</label>
+            <input id="customCurriculumInput" type="text" placeholder="Type the framework name"/>
+          </div>
+
+          <div class="field" style="grid-column:1/-1">
+            <label for="subjectsInput">Primary subject areas</label>
+            <input id="subjectsInput" type="text" placeholder="e.g., Science, Mathematics, Social Studies"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Output language</h3>
+        <div class="grid">
+          <div class="field">
+            <label for="languageOutput">Preferred output language</label>
+            <select id="languageOutput">
+              <option value="English">English</option>
+              <option value="French">French</option>
+              <option value="Spanish">Spanish</option>
+              <option value="Portuguese">Portuguese</option>
+              <option value="Arabic">Arabic</option>
+              <option value="Swahili">Swahili</option>
+              <option value="Hausa">Hausa</option>
+              <option value="Yoruba">Yoruba</option>
+              <option value="Twi">Twi</option>
+              <option value="Other">Other</option>
+            </select>
+            <div class="hint">Select “Other” to type a language not listed.</div>
+          </div>
+
+          <div class="field" id="languageOtherWrap" style="display:none">
+            <label for="languageOther">Type language (if Other)</label>
+            <input id="languageOther" type="text" placeholder="e.g., Dagbani, Gurune, Ewe, Igbo"/>
+            <div class="hint">Choose a language from the list, or select “Other” to type a language.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Voice settings</h3>
+        <div class="grid">
+          <div class="field">
+            <label for="autoSendDelayInput">Voice auto-send delay (milliseconds)</label>
+            <input id="autoSendDelayInput" type="number" min="400" max="4000" step="100" placeholder="e.g., 1200"/>
+            <div class="hint">After you stop speaking, UbuntuEduAI waits this long before sending your transcript.</div>
+          </div>
+          <div class="field">
+            <label for="ttsPauseMsInput">Natural pause between sentences (milliseconds)</label>
+            <input id="ttsPauseMsInput" type="number" min="0" max="1500" step="50" placeholder="e.g., 180"/>
+            <div class="hint">Creates a more natural voice rhythm by inserting small pauses between sentences.</div>
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label for="sttLangInput">Dictation language (BCP-47 code)</label>
+            <input id="sttLangInput" type="text" placeholder="e.g., en-US, en-GB, fr-FR"/>
+            <div class="hint">Use <code>en-US</code> for most U.S. English. Change only if recognition accuracy is poor.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>API authentication mode</h3>
+        <div class="row">
+          <div class="toggleCard" id="serverModeToggle" onclick="setApiMode('server')">
+            <div class="switch"><div class="knob"></div></div>
+            <div>
+              <div style="font-weight:900;font-size:13px">Server-managed keys</div>
+              <div class="hint">Frontend calls your backend; keys are not exposed to users.</div>
+            </div>
+          </div>
+          <div class="toggleCard" id="clientModeToggle" onclick="setApiMode('client')">
+            <div class="switch"><div class="knob"></div></div>
+            <div>
+              <div style="font-weight:900;font-size:13px">User-provided keys</div>
+              <div class="hint">Users paste keys in browser. Good for demos, not ideal for production.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hint" style="margin-top:10px">
+          Server mode calls: <code>/api/health</code>, <code>/api/chat</code>, optional <code>/api/chat/stream</code>, optional <code>/api/image</code>, and optional <code>/api/video</code>.
+        </div>
+
+        <div class="grid" style="margin-top:12px">
+          <div class="field">
+            <label for="openaiKey">OpenAI API key (client mode only)</label>
+            <input id="openaiKey" type="password" placeholder="Not required in server mode"/>
+          </div>
+          <div class="field">
+            <label for="anthropicKey">Anthropic API key (client mode only)</label>
+            <input id="anthropicKey" type="password" placeholder="Not required in server mode"/>
+          </div>
+          <div class="field">
+            <label for="googleKey">Google API key (client mode only)</label>
+            <input id="googleKey" type="password" placeholder="Not required in server mode"/>
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <div class="toggleCard" id="sessionKeysToggle" onclick="toggleSessionKeys()">
+              <div class="switch"><div class="knob"></div></div>
+              <div>
+                <div style="font-weight:900;font-size:13px">Remember keys for this browser session</div>
+                <div class="hint">Keys in sessionStorage only (clears when tab closes).</div>
+              </div>
+            </div>
+            <div class="hint" style="margin-top:8px">This app does not store keys in localStorage.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Accessibility toggles</h3>
+        <div class="row">
+          <div class="toggleCard" id="signFriendlyToggle" onclick="toggleSignFriendly()">
+            <div class="switch"><div class="knob"></div></div>
+            <div>
+              <div style="font-weight:900;font-size:13px">Sign-friendly output</div>
+              <div class="hint">Short sentences, fewer idioms, numbered steps, line breaks.</div>
+            </div>
+          </div>
+          <div class="toggleCard" id="captionsToggle" onclick="toggleCaptions()">
+            <div class="switch"><div class="knob"></div></div>
+            <div>
+              <div style="font-weight:900;font-size:13px">Transcripts panel</div>
+              <div class="hint">Shows live transcript + assistant lines in the response pane.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div class="toggleCard" id="largeTextToggle" onclick="toggleLargeText()">
+            <div class="switch"><div class="knob"></div></div>
+            <div><div style="font-weight:900;font-size:13px">Large text</div><div class="hint">Bigger UI text.</div></div>
+          </div>
+          <div class="toggleCard" id="reduceMotionToggle" onclick="toggleReduceMotion()">
+            <div class="switch"><div class="knob"></div></div>
+            <div><div style="font-weight:900;font-size:13px">Reduce motion</div><div class="hint">Stops animations and transitions.</div></div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button class="chipBtn" onclick="setTheme('dark')">Theme: Dark</button>
+          <button class="chipBtn" onclick="setTheme('light')">Theme: Light</button>
+          <button class="chipBtn" onclick="setTheme('gray')">Theme: Gray</button>
+          <button class="chipBtn" onclick="setTheme('hc')">Theme: High contrast</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Local knowledge base (optional)</h3>
+        <div class="row" style="justify-content:space-between">
+          <div class="hint">
+            Upload reference files (PDF, DOCX, TXT). This demo stores file names only. For real retrieval, parse + embed on your backend.
+          </div>
+          <div>
+            <input type="file" id="localFilesInput" multiple accept=".pdf,.docx,.txt" style="display:none"/>
+            <button class="chipBtn" onclick="document.getElementById('localFilesInput').click()">Choose files</button>
+          </div>
+        </div>
+        <div id="uploadedFilesList" style="margin-top:10px"></div>
+      </div>
+
+      <button class="save" onclick="saveSettings()">Save configuration</button>
+      <div class="hint" style="margin-top:10px">After saving, the message box unlocks and status turns green if configured.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ACCESS MODAL -->
+<div class="modal" id="accessModal" onclick="modalBackdropClose(event)">
+  <div class="panel" role="dialog" aria-modal="true" aria-label="Access">
+    <div class="pHead">
+      <h2>Access (Interpreter, camera)</h2>
+      <button class="close" onclick="closeAccess()">Close</button>
+    </div>
+    <div class="pBody">
+      <div class="section">
+        <h3>Interpreter call (optional)</h3>
+        <div class="field">
+          <label for="interpreterLink">Interpreter meeting link</label>
+          <input id="interpreterLink" type="text" placeholder="Paste Zoom/Meet/Teams link..."/>
+        </div>
+        <div class="divider"></div>
+        <div class="toolGrid">
+          <button class="toolAction" onclick="openInterpreterLink()">
+            Open interpreter link
+            <span class="sub">Opens in a new tab</span>
+          </button>
+        </div>
+      </div>
+      <div class="section">
+        <h3>Camera preview (optional)</h3>
+        <div class="videoBox"><video id="cameraPreview" autoplay playsinline muted></video></div>
+        <div class="divider"></div>
+        <div class="toolGrid">
+          <button class="toolAction" onclick="startCamera()">
+            Start camera preview
+            <span class="sub">Local only</span>
+          </button>
+          <button class="toolAction" onclick="stopCamera()">
+            Stop camera preview
+            <span class="sub">Turn off</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIBRARY MODAL -->
+<div class="modal" id="libraryModal" onclick="modalBackdropClose(event)">
+  <div class="panel" role="dialog" aria-modal="true" aria-label="Library">
+    <div class="pHead">
+      <h2>Library (Culture lenses, learning difficulties, teacher supports)</h2>
+      <button class="close" onclick="closeLibrary()">Close</button>
+    </div>
+    <div class="pBody">
+      <div class="section">
+        <h3>Culture: categories, definitions, examples</h3>
+        <table aria-label="Culture categories">
+          <thead>
+            <tr>
+              <th style="width:20%">Category</th>
+              <th style="width:40%">Definition</th>
+              <th style="width:40%">Specific examples</th>
+            </tr>
+          </thead>
+          <tbody id="cultureTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="section">
+        <h3>Learning difficulties: impacts and strategies</h3>
+        <table aria-label="Learning difficulties">
+          <thead>
+            <tr>
+              <th style="width:18%">Learning difficulty</th>
+              <th style="width:22%">Primary area affected</th>
+              <th style="width:60%">Core strategies / accommodations</th>
+            </tr>
+          </thead>
+          <tbody id="learningTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="section">
+        <h3>AI support areas (independent scaffolds)</h3>
+        <div class="hint">Click any option to insert a guided prompt into the composer.</div>
+        <div class="divider"></div>
+        <div class="toolGrid">
+          <button class="toolAction" onclick="applyTemplate('data_gaps'); closeLibrary()">
+            Data analysis: identifying learning gaps
+            <span class="sub">Find class and student misconception patterns</span>
+          </button>
+          <button class="toolAction" onclick="applyTemplate('data_interventions'); closeLibrary()">
+            Personalized interventions
+            <span class="sub">Recommend targeted next-steps and resources</span>
+          </button>
+          <button class="toolAction" onclick="applyTemplate('admin_templates'); closeLibrary()">
+            Communication templates (families, IEP/504 language)
+            <span class="sub">Draft clear, respectful, strengths-based messages</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" multiple accept=".pdf,.png,.jpg,.jpeg,.docx,.txt" style="display:none"/>
+
+<script>
+/* -----------------------------
+   Data
+------------------------------ */
+const CULTURE_ROWS = [
+  { category:"Tangible (Material)", definition:"Physical objects, artifacts, and structures created and used by a society.", examples:"Food, clothing, tools, architecture, art." },
+  { category:"Intangible (Non-Material)", definition:"Abstract ideas, values, beliefs, norms, and language practices.", examples:"Language, values, social norms, stories, music, faith practices." },
+  { category:"Societal & Regional", definition:"Shared patterns defining social groups and geographic communities.", examples:"National, regional, school, workplace, and youth cultures." }
+];
+
+const LEARNING_ROWS = [
+  { diff:"Dyslexia", area:"Reading, decoding, spelling", strat:"Multisensory phonics, text-to-speech/audiobooks, reduce reading load, explicit vocabulary." },
+  { diff:"Dysgraphia", area:"Writing, handwriting, expression", strat:"Speech-to-text, graphic organizers, keyboarding, alternative response modes." },
+  { diff:"Dyscalculia", area:"Math concepts, calculation", strat:"Manipulatives, visuals, number lines, gradual release, formula supports." },
+  { diff:"ADHD", area:"Attention, organization, executive function", strat:"Chunking, checklists, timers, movement breaks, clear routines and cues." },
+  { diff:"Dyspraxia", area:"Motor coordination", strat:"Reduce copying, extra time, assistive tools, OT-informed supports." },
+  { diff:"Language Processing Disorder (LPD)", area:"Understanding and expressing language", strat:"Visual supports, simplified directions, preteach vocabulary, frequent checks." }
+];
+
+/* -----------------------------
+   Required Category Menu (Narrative + streamlined)
+------------------------------ */
+const CATEGORIES = [
+  {
+    key:"diff",
+    label:"Differentiated Instruction",
+    response:
+`Welcome to Differentiated Instruction.
+This space is for adjusting learning pathways so more learners can access the same goal. I can help you design language-aware supports, neurodiversity-friendly routines, and access planning that fits the task demands and your local context. If you want, I can also turn class evidence (common errors, quiz results, observation notes) into a short reteach cycle and quick checks.`,
+    generatePrompt:
+`Create a differentiated support plan for a lesson or task.
+
+First ask only what you truly need (grade/subject, learning goal/standard, what learners must produce, what is hard right now, time/resources, languages, and any access needs).
+Then respond in a streamlined way:
+1) Summary (3–6 sentences).
+2) Instruction plan (numbered steps with teacher talk moves).
+3) Differentiation (language-aware + neurodiversity supports + access/IEP/504 ideas) described as options, not long lists.
+4) Checks for understanding and a short monitoring plan.
+If the user asks, add resources/links.`,
+    explainPrompt:
+`Explain one item inside Differentiated Instruction in a clear, practical way.
+Pick one and explain: language scaffolds, ELL accommodations, heritage language support, dyslexia supports, dysgraphia supports, dyscalculia supports, ADHD routines, dyspraxia supports, language processing supports, access planning, assistive technology, reteaching cycle, retrieval practice.
+Include: what it is, what it looks like in class, a quick example, and a short checklist.`
+  },
+  {
+    key:"neuro",
+    label:"Neurodiversity Supports",
+    response:
+`Welcome to Neurodiversity Supports.
+Here we focus on reducing barriers while protecting learner dignity: practical classroom routines, assessment access options, and strength-based supports for attention, reading, writing, math, language processing, and motor coordination. Tell me the task and what is difficult, and I will tailor supports without overloading you with a long checklist.`,
+    generatePrompt:
+`Create a neurodiversity-friendly support plan for a student or small group.
+
+Ask a few focused questions (age/grade, subject/task, strengths, what is hard, what helps, any triggers, time/resources).
+Then respond:
+Summary (short), classroom routines (numbered), assessment access options (compact), and a simple weekly monitoring plan.
+Avoid long bullet lists unless the user asks for “full detail.”`,
+    explainPrompt:
+`Explain ONE neurodiversity item in detail: dyslexia, dysgraphia, dyscalculia, ADHD, dyspraxia, or language processing.
+Include: definition, classroom indicators, what to do first, what to avoid, and 2–3 mini examples.`
+  },
+  {
+    key:"multi",
+    label:"Multilingual Supports",
+    response:
+`Welcome to Multilingual Supports.
+This category helps you keep rigor high while making language demands fair. I can scaffold vocabulary and discourse, align supports to task demands, and suggest bilingual pathways that affirm heritage language while still meeting curriculum expectations.`,
+    generatePrompt:
+`Create multilingual and language-aware supports.
+
+Ask: grade/content, home language(s), current proficiency, key vocabulary, and assessment/task type.
+Then provide a short plan: Summary, language scaffolds (sentence frames/visuals/structured talk), access options, and quick checks.
+Keep it concise unless the user asks for a full pack.`,
+    explainPrompt:
+`Explain ONE multilingual support: ELL accommodations, language scaffolds, SEI-aligned supports, heritage language integration, or dual-language affirmations.
+Give examples of teacher wording and a quick checklist.`
+  },
+  {
+    key:"access",
+    label:"IEP/504/Access Supports",
+    response:
+`Welcome to IEP, 504, and Access Supports.
+This space helps you make tasks accessible while preserving learning goals. I can suggest task adjustments, assistive technology options, and documentation-ready language that stays respectful and strengths-based.`,
+    generatePrompt:
+`Create IEP/504/access supports for a specific task or unit.
+
+Ask: what the learner must show, what the task requires (reading, writing, timing, sensory load), and any known needs.
+Then respond with a compact set of best-fit options grouped by purpose (access, demonstration of learning, environment/routine), plus a simple monitoring note.`,
+    explainPrompt:
+`Explain ONE access support in detail: IEP accommodations, 504 accommodations, access planning, assistive technology, executive-function supports, sensory supports, or reteaching/accessibility revision.
+Include when to use, examples, and how to document it.`
+  },
+  {
+    key:"lesson_assess",
+    label:"Lesson & Assessment Tools",
+    response:
+`Welcome to Lesson and Assessment Tools.
+This category turns goals into usable classroom materials: lessons, activities, assessments, rubrics, and quick checks. I can also help you tune cognitive demand, reduce bias, and build short reteach loops from student evidence.`,
+    generatePrompt:
+`Generate a teacher-ready lesson or assessment.
+
+Ask only the essentials (grade, topic/standard, time, materials, learner needs, language needs).
+Then respond in a streamlined format:
+Summary → Plan (numbered) → Differentiation options → Quick checks → If relevant: rubric.
+Add links only if requested.`,
+    explainPrompt:
+`Explain ONE tool: lesson plan generator, activity/project design, exit tickets, assessment generator, rubric generator, item writing, or bias/fairness checks.
+Include best use cases, inputs needed, and a tiny example outline.`
+  },
+  {
+    key:"comm",
+    label:"Communication Tools",
+    response:
+`Welcome to Communication Tools.
+This category helps you write clear, respectful messages that strengthen trust: family updates, progress notes, behavior communication, and simple classroom handouts. If you need multilingual versions, I can keep meaning consistent without sounding robotic.`,
+    generatePrompt:
+`Generate a communication draft.
+
+Ask 1 to 3 questions only (audience, purpose, tone, language(s), key facts).
+Then provide a polished message plus an optional shorter version for SMS/WhatsApp.`,
+    explainPrompt:
+`Explain ONE communication type: strengths-based family message, progress update, multilingual family communication, behavior report, growth-framed feedback, slides, handout, or guide.
+Include structure, sample lines, and what to avoid.`
+  },
+  {
+    key:"crp",
+    label:"Culturally Responsive Pedagogy Elements",
+    response:
+`Welcome to Culturally Responsive Pedagogy Elements.
+This space helps you keep learning anchored in learners’ identities and community knowledge. I can suggest Funds of Knowledge connections, culturally sustaining examples, language affirmation, and bias-aware assessment tweaks that fit your context.`,
+    generatePrompt:
+`Generate culturally responsive pedagogy elements for a lesson or assessment.
+
+Ask: community context, learner identities, languages, constraints, and the learning goal.
+Then respond with: Summary, 3 to 5 anchored ideas, teacher talk moves, and a quick “fit check” to prevent stereotyping.`,
+    explainPrompt:
+`Explain ONE CRP element: Funds of Knowledge, identity-centered tasks, representational materials, linguistic affirmation, bias-aware assessment, sociocultural relevance, collaborative learning options, or family engagement.
+Include examples and a short checklist.`
+  }
+];
+
+/* -----------------------------
+   State
+------------------------------ */
+let conversations = [];
+let activeConversationId = null;
+
+let config = {
+  theme:"dark",
+  apiMode:"server",
+  rememberKeysThisSession:false,
+
+  country:"", state:"", region:"", town:"",
+  curriculum:"", customCurriculum:"", subjects:"",
+  outLang:"English", languageOther:"",
+
+  openaiKey:"", anthropicKey:"", googleKey:"",
+  localFiles:[],
+
+  // Voice behavior
+  autoSendDelayMs: 1200,
+  ttsPauseMs: 180,
+  sttLang: "en-US",
+
+  tts:false, stt:false,
+  signFriendly:false,
+  showCaptions:false,
+  largeText:false,
+  reduceMotion:false
+};
+
+let conversationHistory = [];
+let attachedFiles = [];
+let imageMode = false;
+let videoMode = false;
+let streamMode = false;
+
+let voiceMode = false;
+let recognition = null;
+let isListening = false;
+let dictationPaused = false;
+let voiceBusy = false;
+
+let pendingAutoSend = "";
+let autoSendTimer = null;
+
+let camStream = null;
+
+let sidebarCollapsed = localStorage.getItem("ubuntuEduAISidebarCollapsed")==="1";
+
+const APP_NAME = "UbuntuEduAI";
+const APP_DESC = "Culturally responsive, context-aware education assistant.";
+
+/* -----------------------------
+   Helpers
+------------------------------ */
+function $(id){ return document.getElementById(id); }
+function escapeHtml(str){
+  return String(str)
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function clamp(n, a, b){ n = Number(n); if(Number.isNaN(n)) return a; return Math.max(a, Math.min(b, n)); }
+
+/* -----------------------------
+   Prompts (Optimized + no markdown headings)
+------------------------------ */
+function buildSystemPrompt(){
+  const signMode = config.signFriendly ? `
+SIGN-FRIENDLY OUTPUT:
+- Use short sentences.
+- Prefer clear numbered steps.
+- Start with "Key points" (2 to 5 lines).
+- Use simple vocabulary where possible.
+- Avoid long paragraphs. Use line breaks.
+- Avoid idioms.
+` : "";
+
+  const categoryRule = `
+CATEGORY MENU (BEHAVIOR RULE):
+- The app contains 7 selectable categories:
+  1) Differentiated Instruction
+  2) Neurodiversity Supports
+  3) Multilingual Supports
+  4) IEP/504/Access Supports
+  5) Lesson & Assessment Tools
+  6) Communication Tools
+  7) Culturally Responsive Pedagogy Elements
+- When the user selects a category, respond with:
+  (a) a short welcome and narrative overview (no long lists),
+  (b) three next-step choices: “Generate something for me”, “Explain an item in more detail”, “Go back to menu”.
+`;
+
+  const outputStyle = `
+OUTPUT STYLE:
+- Plain text only.
+- Do NOT use markdown headings (no ###, no hashtags).
+- Use compact section labels like: Summary:, Plan:, Options:, Quick checks:.
+- Default to concise answers. Expand only when asked, or when enough details are provided.
+- If more information is needed, ask 1 to 3 focused questions (not a long questionnaire).
+`;
+
+  return `You are ${APP_NAME}, ${APP_DESC}
+
+FOUNDATIONS:
+- Culturally Responsive Teaching
+- Funds of Knowledge
+- Critical Pedagogy
+- Asset-Based Pedagogy
+- UNESCO AI ethics principles (equity, safety, transparency)
+
+DISABILITY-AWARE SUPPORT (use when relevant):
+- Physical needs: adapt pacing; alternative formats; motor access.
+- Sensory needs: captions, text alternatives, audio-friendly explanations.
+- Cognitive/neurodevelopmental needs: step-by-step structure; reduce cognitive load; multimodal supports.
+- Chronic/mental health/medical needs: reduce time pressure; predictable structure; check overload.
+
+${categoryRule}
+
+BEHAVIOR:
+- Co-design with the educator; do not replace educator judgment.
+- Probe respectfully for culture, language, community context, and constraints.
+- Use strengths-based language.
+- Offer low-cost alternatives where possible.
+
+USER CONTEXT:
+Country: ${config.country || "Not specified"}
+State (optional): ${config.state || "Not specified"}
+Region: ${config.region || "Not specified"}
+Town/city (optional): ${config.town || "Not specified"}
+Curriculum: ${config.curriculum || config.customCurriculum || "Not specified"}
+Primary subjects: ${config.subjects || "All subjects"}
+Preferred output language: ${config.outLang || "English"}
+
+${outputStyle}
+${signMode}`.trim();
+}
+
+/* -----------------------------
+   Theme + status
+------------------------------ */
+function setTheme(theme){
+  config.theme = theme;
+  document.body.classList.remove("light","gray","hc");
+  if(theme==="light") document.body.classList.add("light");
+  if(theme==="gray") document.body.classList.add("gray");
+  if(theme==="hc") document.body.classList.add("hc");
+  persistNonSensitiveConfig();
+}
+function updateStatus(ok, label){
+  const dot = $("statusDot");
+  const text = $("statusText");
+  if(ok){ dot.classList.add("ok"); text.textContent = label || "Connected"; }
+  else { dot.classList.remove("ok"); text.textContent = label || "Not connected"; }
+}
+function showTyping(on){
+  $("typingIndicator").classList.toggle("on", !!on);
+  const c = $("chatMessages"); c.scrollTop = c.scrollHeight;
+}
+
+/* -----------------------------
+   Modals
+------------------------------ */
+function openSettings(){ $("settingsModal").classList.add("on"); }
+function closeSettings(){ $("settingsModal").classList.remove("on"); }
+function openAccess(){ $("accessModal").classList.add("on"); }
+function closeAccess(){ $("accessModal").classList.remove("on"); }
+function openLibrary(){ $("libraryModal").classList.add("on"); }
+function closeLibrary(){ $("libraryModal").classList.remove("on"); }
+function modalBackdropClose(e){
+  if(e.target.classList.contains("modal")) e.target.classList.remove("on");
+}
+
+/* -----------------------------
+   Sidebar controls
+------------------------------ */
+function toggleMobileDrawer(force){
+  const open = (typeof force==="boolean") ? force : !$("leftPanel").classList.contains("mobileOpen");
+  $("leftPanel").classList.toggle("mobileOpen", open);
+  $("scrim").classList.toggle("on", open);
+}
+function toggleSidebar(){
+  if(window.innerWidth <= 860){
+    toggleMobileDrawer();
+    return;
+  }
+  sidebarCollapsed = !sidebarCollapsed;
+  $("leftPanel").classList.toggle("collapsed", sidebarCollapsed);
+  localStorage.setItem("ubuntuEduAISidebarCollapsed", sidebarCollapsed ? "1" : "0");
+  $("sidebarBtn").textContent = sidebarCollapsed ? "☰ Sidebar" : "⟨ Hide";
+}
+
+/* -----------------------------
+   Live panel badges (+ show/hide panel)
+------------------------------ */
+function updateLivePanelBadges(){
+  const anyLive = config.stt || config.tts || config.showCaptions || voiceMode || streamMode || videoMode;
+  $("livePanel").style.display = anyLive ? "block" : "none";
+
+  $("lpSttBtn").classList.toggle("on", !!config.stt);
+  $("lpTtsBtn").classList.toggle("on", !!config.tts);
+  $("lpVoiceModeBtn").classList.toggle("on", !!voiceMode);
+  $("lpCaptionsBtn").classList.toggle("on", !!config.showCaptions);
+  $("lpLiveBtn").classList.toggle("on", !!streamMode);
+  $("lpVideoBtn").classList.toggle("on", !!videoMode);
+
+  $("lpPauseSttBtn").classList.toggle("on", !!dictationPaused);
+  $("lpPauseTtsBtn").classList.toggle("on", !!isVoicePaused());
+
+  $("lpSttBtn").textContent = config.stt ? "Dictation (STT): On" : "Dictation (STT)";
+  $("lpTtsBtn").textContent = config.tts ? "Voice replies (TTS): On" : "Voice replies (TTS)";
+  $("lpVoiceModeBtn").textContent = voiceMode ? "Voice mode loop: On" : "Voice mode loop";
+  $("lpCaptionsBtn").textContent = config.showCaptions ? "Transcripts: On" : "Transcripts";
+  $("lpLiveBtn").textContent = streamMode ? "Live mode: On" : "Live mode";
+  $("lpVideoBtn").textContent = videoMode ? "Video mode: On" : "Video mode";
+
+  $("lpPauseSttBtn").textContent = dictationPaused ? "Resume dictation" : "Pause dictation";
+  $("lpPauseTtsBtn").textContent = isVoicePaused() ? "Resume voice" : "Pause voice";
+
+  $("ttsText").textContent = `Voice replies: ${config.tts ? "On" : "Off"}`;
+  $("dictPauseText").textContent = `Dictation: ${dictationPaused ? "Paused" : "Active"}`;
+  $("liveText").textContent = `Live: ${streamMode ? "On" : "Off"}`;
+  $("videoText").textContent = `Video: ${videoMode ? "On" : "Off"}`;
+  $("micText").textContent = `Mic: ${isListening ? (dictationPaused ? "Paused" : "Listening") : "Off"}`;
+  $("micDot").classList.toggle("on", !!isListening && !dictationPaused);
+
+  $("transcriptDrawer").style.display = config.showCaptions ? "block" : "none";
+}
+
+/* -----------------------------
+   Modes
+------------------------------ */
+function toggleImageMode(){
+  imageMode = !imageMode;
+  if(imageMode) videoMode = false;
+  $("imageModeBtn").classList.toggle("on", imageMode);
+  $("videoModeBtn").classList.toggle("on", videoMode);
+  refreshComposerMode();
+  updateLivePanelBadges();
+}
+function toggleVideoMode(){
+  videoMode = !videoMode;
+  if(videoMode) imageMode = false;
+  $("videoModeBtn").classList.toggle("on", videoMode);
+  $("imageModeBtn").classList.toggle("on", imageMode);
+  refreshComposerMode();
+  updateLivePanelBadges();
+}
+function toggleStreaming(){
+  streamMode = !streamMode;
+  $("streamModeBtn").classList.toggle("on", streamMode);
+  persistNonSensitiveConfig();
+  refreshComposerMode();
+  updateLivePanelBadges();
+}
+function refreshComposerMode(){
+  const info = $("modeInfo");
+  const input = $("composerInput");
+  if(videoMode){
+    info.textContent = "Mode: Video generation (server endpoint optional)";
+    input.placeholder = "Describe a short educational video (storyboard, language level, local context)...";
+  }else if(imageMode){
+    info.textContent = "Mode: Image generation";
+    input.placeholder = "Describe an educational image (diagram, poster, culturally grounded illustration)...";
+  }else{
+    info.textContent = streamMode ? "Mode: Text (live if server supports)" : "Mode: Text";
+    input.placeholder = "Choose a category on the left, or describe your lesson, assessment, or learner context...";
+  }
+}
+
+/* -----------------------------
+   Persistence
+------------------------------ */
+function persistNonSensitiveConfig(){
+  const safe = {
+    theme: config.theme,
+    apiMode: config.apiMode,
+    rememberKeysThisSession: config.rememberKeysThisSession,
+
+    country: config.country, state: config.state, region: config.region, town: config.town,
+    curriculum: config.curriculum, customCurriculum: config.customCurriculum, subjects: config.subjects,
+    outLang: config.outLang, languageOther: config.languageOther,
+
+    autoSendDelayMs: config.autoSendDelayMs,
+    ttsPauseMs: config.ttsPauseMs,
+    sttLang: config.sttLang,
+
+    tts: config.tts, stt: config.stt,
+    signFriendly: config.signFriendly, showCaptions: config.showCaptions,
+    largeText: config.largeText, reduceMotion: config.reduceMotion,
+    streamMode: streamMode
+  };
+  localStorage.setItem("ubuntuEduAIConfig", JSON.stringify(safe));
+}
+function loadSavedConfig(){
+  const saved = localStorage.getItem("ubuntuEduAIConfig");
+  if(saved){
+    try{
+      const parsed = JSON.parse(saved);
+      config = { ...config, ...parsed };
+      streamMode = !!parsed.streamMode;
+    }catch(_){}
+  }
+  const sessionKeys = sessionStorage.getItem("ubuntuEduAIKeys");
+  if(sessionKeys){
+    try{
+      const k = JSON.parse(sessionKeys);
+      config.openaiKey = k.openaiKey || "";
+      config.anthropicKey = k.anthropicKey || "";
+      config.googleKey = k.googleKey || "";
+      config.rememberKeysThisSession = true;
+    }catch(_){}
+  }
+  config.autoSendDelayMs = clamp(config.autoSendDelayMs ?? 1200, 400, 4000);
+  config.ttsPauseMs = clamp(config.ttsPauseMs ?? 180, 0, 1500);
+  config.sttLang = (config.sttLang || "en-US").trim();
+}
+
+/* -----------------------------
+   Accessibility
+------------------------------ */
+function toggleSignFriendly(){
+  config.signFriendly = !config.signFriendly;
+  $("signFriendlyToggle").classList.toggle("on", config.signFriendly);
+  persistNonSensitiveConfig();
+}
+function toggleCaptions(){
+  config.showCaptions = !config.showCaptions;
+  $("captionsToggle").classList.toggle("on", config.showCaptions);
+  persistNonSensitiveConfig();
+  updateLivePanelBadges();
+}
+function toggleLargeText(){
+  config.largeText = !config.largeText;
+  document.body.classList.toggle("large", config.largeText);
+  $("largeTextToggle").classList.toggle("on", config.largeText);
+  persistNonSensitiveConfig();
+}
+function toggleReduceMotion(){
+  config.reduceMotion = !config.reduceMotion;
+  document.body.classList.toggle("reduce", config.reduceMotion);
+  $("reduceMotionToggle").classList.toggle("on", config.reduceMotion);
+  persistNonSensitiveConfig();
+}
+function toggleTTS(){
+  config.tts = !config.tts;
+  if(!config.tts) stopSpeaking();
+  persistNonSensitiveConfig();
+  updateLivePanelBadges();
+}
+function toggleSTT(){
+  config.stt = !config.stt;
+  persistNonSensitiveConfig();
+  if(!config.stt){
+    dictationPaused = false;
+    if(voiceMode) toggleVoiceMode(); // voice loop depends on STT
+    stopListening(true);
+  }
+  updateLivePanelBadges();
+}
+
+/* Dedicated pause/resume dictation (without turning STT off) */
+function toggleDictationPause(){
+  if(!config.stt){
+    alert("Enable Dictation (STT) first.");
+    return;
+  }
+  dictationPaused = !dictationPaused;
+  if(dictationPaused){
+    stopListening(true);
+    appendCaptions("System: Dictation paused.");
+  }else{
+    appendCaptions("System: Dictation resumed.");
+    if(voiceMode) startListening();
+  }
+  updateLivePanelBadges();
+}
+
+/* -----------------------------
+   Captions / Transcripts
+------------------------------ */
+function appendCaptions(text){
+  if(!config.showCaptions) return;
+  const box = $("captionsBox");
+  const now = new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+  box.textContent += `[${now}] ${text}\n`;
+  box.scrollTop = box.scrollHeight;
+}
+function clearCaptions(){ $("captionsBox").textContent = ""; }
+
+/* -----------------------------
+   Camera preview
+------------------------------ */
+async function startCamera(){
+  try{
+    if(camStream) return;
+    camStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+    const v = $("cameraPreview");
+    v.srcObject = camStream;
+    await v.play();
+  }catch(_){
+    alert("Camera could not start. Check browser permissions.");
+  }
+}
+function stopCamera(){
+  if(!camStream) return;
+  camStream.getTracks().forEach(t=>t.stop());
+  camStream = null;
+  $("cameraPreview").srcObject = null;
+}
+function openInterpreterLink(){
+  const link = $("interpreterLink").value.trim();
+  if(!link) return alert("Paste a meeting link first.");
+  window.open(link, "_blank", "noopener,noreferrer");
+}
+
+/* -----------------------------
+   Tables
+------------------------------ */
+function renderLibraryTables(){
+  const cBody = $("cultureTableBody");
+  const lBody = $("learningTableBody");
+  if(cBody){
+    cBody.innerHTML = CULTURE_ROWS.map(r=>`
+      <tr><td>${escapeHtml(r.category)}</td><td>${escapeHtml(r.definition)}</td><td>${escapeHtml(r.examples)}</td></tr>
+    `).join("");
+  }
+  if(lBody){
+    lBody.innerHTML = LEARNING_ROWS.map(r=>`
+      <tr><td>${escapeHtml(r.diff)}</td><td>${escapeHtml(r.area)}</td><td>${escapeHtml(r.strat)}</td></tr>
+    `).join("");
+  }
+}
+
+/* -----------------------------
+   CATEGORY QUICK ACCESS RENDER
+------------------------------ */
+function renderCategoryList(){
+  const box = $("categoryList");
+  box.innerHTML = "";
+  CATEGORIES.forEach(c=>{
+    const btn = document.createElement("button");
+    btn.className = "toolAction";
+    btn.onclick = ()=>selectCategory(c.key);
+    btn.innerHTML = `${escapeHtml(c.label)}<span class="sub">Open category</span>`;
+    box.appendChild(btn);
+  });
+}
+
+/* -----------------------------
+   Templates (kept for library buttons)
+------------------------------ */
+function applyTemplate(key){
+  const map = {
+    data_gaps:
+`I will provide quiz/assignment results (or common mistakes).
+Please identify learning gaps for the class and individuals.
+Return a short prioritised list, likely causes, and a brief reteach plan.`,
+    data_interventions:
+`Based on learning gaps, recommend targeted interventions.
+Return 3 to 5 strategies per gap, progress checks, and low-cost resources.`,
+    admin_templates:
+`Generate communication templates.
+Ask one clarifying question, then provide:
+(1) family email about progress,
+(2) family message about supports,
+(3) documentation-ready accommodations language if relevant.
+Keep it concise unless I ask for a long version.`
+  };
+
+  const ui = $("composerInput");
+  ui.value = map[key] || "";
+  ui.focus();
+  $("welcomeScreen").style.display = "none";
+
+  if(window.innerWidth <= 860) toggleMobileDrawer(false);
+}
+
+/* -----------------------------
+   Category behavior (REQUIRED)
+------------------------------ */
+let lastCategoryKey = null;
+
+function selectCategory(key){
+  const cat = CATEGORIES.find(c=>c.key===key);
+  if(!cat) return;
+
+  lastCategoryKey = key;
+
+  $("welcomeScreen").style.display = "none";
+
+  addBubble("assistant", cat.response, "text", false);
+  addBubble("assistant", buildCategoryActionsHTML(key), "html", false);
+
+  if(window.innerWidth <= 860) toggleMobileDrawer(false);
+}
+
+function buildCategoryActionsHTML(key){
+  return `
+    <div class="actionRow" role="group" aria-label="Category next steps">
+      <button class="chipBtn" onclick="categoryAction('${escapeHtml(key)}','generate')">Generate something for me</button>
+      <button class="chipBtn" onclick="categoryAction('${escapeHtml(key)}','explain')">Explain an item in more detail</button>
+      <button class="chipBtn" onclick="categoryAction('${escapeHtml(key)}','menu')">Go back to menu</button>
+    </div>
+  `;
+}
+
+function categoryAction(key, action){
+  const cat = CATEGORIES.find(c=>c.key===key);
+  if(!cat) return;
+
+  if(action==="generate"){
+    $("composerInput").value = cat.generatePrompt || "";
+    $("composerInput").focus();
+    return;
+  }
+  if(action==="explain"){
+    $("composerInput").value = cat.explainPrompt || "";
+    $("composerInput").focus();
+    return;
+  }
+  if(action==="menu"){
+    if(window.innerWidth <= 860){
+      toggleMobileDrawer(true);
+    }else{
+      const el = $("categoryList");
+      el?.scrollIntoView({ behavior: config.reduceMotion ? "auto" : "smooth", block:"nearest" });
+    }
+    return;
+  }
+}
+
+/* -----------------------------
+   Conversations
+------------------------------ */
+function startNewChat(){
+  conversationHistory = [];
+  attachedFiles = [];
+  imageMode = false;
+  videoMode = false;
+  refreshComposerMode();
+  renderAttachments();
+
+  const convo = {
+    id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()),
+    title: "New conversation",
+    snippet: "No messages yet",
+    messages: []
+  };
+  conversations.unshift(convo);
+  activeConversationId = convo.id;
+  syncHistoryFromActive();
+  renderConversations();
+  renderChat();
+
+  $("welcomeScreen").style.display = "block";
+  if(window.innerWidth <= 860) toggleMobileDrawer(false);
+}
+function renderConversations(){
+  const list = $("convList");
+  list.innerHTML = "";
+  conversations.forEach(c=>{
+    const div = document.createElement("div");
+    div.className = "conv" + (c.id===activeConversationId ? " active" : "");
+    div.setAttribute("role","listitem");
+    div.onclick = ()=>{
+      activeConversationId = c.id;
+      syncHistoryFromActive();
+      renderConversations();
+      renderChat();
+      if(window.innerWidth <= 860) toggleMobileDrawer(false);
+    };
+    div.innerHTML = `<div class="convTitle">${escapeHtml(c.title)}</div><div class="convSnip">${escapeHtml(c.snippet||"")}</div>`;
+    list.appendChild(div);
+  });
+}
+function syncHistoryFromActive(){
+  const active = conversations.find(x=>x.id===activeConversationId);
+  conversationHistory = active ? [...active.messages] : [];
+}
+function updateActiveConversationMeta(){
+  const active = conversations.find(x=>x.id===activeConversationId);
+  if(!active) return;
+
+  const lastUser = [...conversationHistory].reverse().find(m=>m.role==="user");
+  if(lastUser){
+    const text = (lastUser.content||"").trim();
+    active.title = active.title==="New conversation" ? smartTitle(text) : active.title;
+    active.snippet = text.slice(0,90);
+  }else{
+    active.snippet = "No messages yet";
+  }
+  active.messages = [...conversationHistory];
+}
+function smartTitle(t){
+  const clean = t.replace(/\s+/g," ").trim();
+  if(!clean) return "New conversation";
+  return clean.length>42 ? clean.slice(0,42)+"…" : clean;
+}
+
+/* -----------------------------
+   Chat rendering
+------------------------------ */
+function renderChat(){
+  const container = $("chatMessages");
+  const typing = $("typingIndicator");
+  const welcome = $("welcomeScreen");
+
+  [...container.querySelectorAll(".msg")].forEach(n=>n.remove());
+
+  if(conversationHistory.length===0){
+    welcome.style.display = "block";
+  }else{
+    welcome.style.display = "none";
+    conversationHistory.forEach(m=>{
+      if(m.type==="image") addBubble("assistant", m.content, "image", true);
+      else if(m.type==="video") addBubble("assistant", m.content, "video", true);
+      else if(m.type==="html") addBubble(m.role==="user" ? "user" : "assistant", m.content, "html", true);
+      else addBubble(m.role==="user" ? "user" : "assistant", m.content, "text", true);
+    });
+  }
+
+  container.appendChild(typing);
+  container.scrollTop = container.scrollHeight;
+}
+function addBubble(kind, content, type="text", skipHistory=false){
+  const container = $("chatMessages");
+  const msg = document.createElement("div");
+  msg.className = "msg " + (kind==="user" ? "user" : "assistant");
+
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.textContent = kind==="user" ? "You" : "UbuntuEduAI";
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.setAttribute("tabindex","0");
+
+  if(type==="image"){
+    bubble.innerHTML = `<img src="${escapeHtml(content)}" alt="Generated image" style="max-width:560px;width:100%;border-radius:14px;border:1px solid var(--border);margin-top:8px;display:block"/>`;
+  }else if(type==="video"){
+    bubble.innerHTML = `
+      <div class="videoBox" style="margin-top:8px">
+        <video controls playsinline src="${escapeHtml(content)}"></video>
+      </div>
+      <div class="hint" style="margin-top:10px">If video does not play, open the URL directly: <span style="word-break:break-all">${escapeHtml(content)}</span></div>
+    `;
+  }else if(type==="html"){
+    bubble.innerHTML = content;
+  }else{
+    bubble.innerHTML = escapeHtml(content).replace(/\n/g,"<br/>");
+  }
+
+  msg.appendChild(meta);
+  msg.appendChild(bubble);
+
+  const typing = $("typingIndicator");
+  container.insertBefore(msg, typing);
+
+  if(!skipHistory){
+    conversationHistory.push({ role: kind==="user" ? "user" : "assistant", content, type });
+    updateActiveConversationMeta();
+    renderConversations();
+  }
+
+  container.scrollTop = container.scrollHeight;
+  return bubble;
+}
+function addAssistantPlaceholder(){ return addBubble("assistant","", "text", true); }
+
+/* -----------------------------
+   Files
+------------------------------ */
+function attachFile(){ $("fileInput").click(); }
+$("fileInput").addEventListener("change",(e)=>{
+  const files = Array.from(e.target.files || []);
+  attachedFiles = [...attachedFiles, ...files];
+  renderAttachments();
+});
+$("localFilesInput").addEventListener("change",(e)=>{
+  const files = Array.from(e.target.files || []);
+  config.localFiles = [...config.localFiles, ...files];
+  renderLocalFiles();
+  persistNonSensitiveConfig();
+});
+function renderAttachments(){
+  const box = $("attachedFiles");
+  box.innerHTML = "";
+  attachedFiles.forEach((f, idx)=>{
+    const pill = document.createElement("div");
+    pill.className = "filePill";
+    pill.innerHTML = `<span>${escapeHtml(f.name)}</span><button class="x" onclick="removeAttachment(${idx})" aria-label="Remove attachment">×</button>`;
+    box.appendChild(pill);
+  });
+}
+function removeAttachment(i){
+  attachedFiles.splice(i,1);
+  renderAttachments();
+}
+function renderLocalFiles(){
+  const container = $("uploadedFilesList");
+  container.innerHTML = "";
+  config.localFiles.forEach((f, idx)=>{
+    const pill = document.createElement("div");
+    pill.className = "filePill";
+    pill.style.marginTop = "8px";
+    pill.innerHTML = `<span>${escapeHtml(f.name)}</span><button class="x" onclick="removeLocalFile(${idx})" aria-label="Remove local file">×</button>`;
+    container.appendChild(pill);
+  });
+}
+function removeLocalFile(i){
+  config.localFiles.splice(i,1);
+  renderLocalFiles();
+  persistNonSensitiveConfig();
+}
+function connectLocalFiles(){
+  if(config.localFiles.length===0){
+    alert("Upload reference files in Settings first.");
+    openSettings();
+    return;
+  }
+  alert(`${config.localFiles.length} reference file(s) available (demo uses names only).`);
+}
+
+/* -----------------------------
+   API mode handling
+------------------------------ */
+function setApiMode(mode){
+  config.apiMode = mode;
+  updateApiModeUI();
+  persistNonSensitiveConfig();
+}
+function updateApiModeUI(){
+  $("serverModeToggle").classList.toggle("on", config.apiMode==="server");
+  $("clientModeToggle").classList.toggle("on", config.apiMode==="client");
+
+  const disableKeys = config.apiMode==="server";
+  ["openaiKey","anthropicKey","googleKey"].forEach(id=>{
+    const el = $(id);
+    el.disabled = disableKeys;
+    el.placeholder = disableKeys ? "Not used in server mode" : "Paste your key (demo)";
+  });
+
+  $("sessionInfo").textContent = `Session: ${config.apiMode==="server" ? "Server-managed keys" : "User-provided keys"}`;
+}
+function toggleSessionKeys(){
+  config.rememberKeysThisSession = !config.rememberKeysThisSession;
+  $("sessionKeysToggle").classList.toggle("on", config.rememberKeysThisSession);
+
+  if(!config.rememberKeysThisSession){
+    sessionStorage.removeItem("ubuntuEduAIKeys");
+  }else{
+    sessionStorage.setItem("ubuntuEduAIKeys", JSON.stringify({
+      openaiKey: config.openaiKey||"",
+      anthropicKey: config.anthropicKey||"",
+      googleKey: config.googleKey||""
+    }));
+  }
+  persistNonSensitiveConfig();
+}
+async function pingServer(){
+  try{
+    const res = await fetch("/api/health", { method:"GET" });
+    return res.ok;
+  }catch(_){ return false; }
+}
+
+/* Language “Other” UI */
+function syncLanguageOtherUI(){
+  const isOther = $("languageOutput").value === "Other";
+  $("languageOtherWrap").style.display = isOther ? "block" : "none";
+}
+$("languageOutput").addEventListener("change", syncLanguageOtherUI);
+
+/* -----------------------------
+   Save settings / unlock
+------------------------------ */
+async function saveSettings(){
+  config.country = $("countryInput").value.trim();
+  config.state = ($("stateInput").value || "").trim();
+  config.region = $("regionInput").value.trim();
+  config.town = ($("townInput").value || "").trim();
+
+  config.curriculum = $("curriculumSelect").value;
+  config.customCurriculum = $("customCurriculumInput").value.trim();
+  config.subjects = $("subjectsInput").value.trim();
+
+  const outSel = $("languageOutput").value;
+  const otherLang = ($("languageOther").value || "").trim();
+  config.languageOther = otherLang;
+  config.outLang = (outSel === "Other") ? (otherLang || "Other") : outSel;
+
+  // Voice settings
+  config.autoSendDelayMs = clamp($("autoSendDelayInput").value || config.autoSendDelayMs, 400, 4000);
+  config.ttsPauseMs = clamp($("ttsPauseMsInput").value || config.ttsPauseMs, 0, 1500);
+  config.sttLang = ($("sttLangInput").value || config.sttLang || "en-US").trim() || "en-US";
+
+  // Update SR language if recognition already created
+  if(recognition) recognition.lang = config.sttLang;
+
+  if(config.apiMode==="client"){
+    config.openaiKey = $("openaiKey").value.trim();
+    config.anthropicKey = $("anthropicKey").value.trim();
+    config.googleKey = $("googleKey").value.trim();
+    const hasAny = !!(config.openaiKey || config.anthropicKey || config.googleKey);
+    if(!hasAny){
+      alert("In user-provided mode, enter at least one API key.");
+      return;
+    }
+  }else{
+    const ok = await pingServer();
+    if(!ok){
+      alert("Server mode selected, but /api/health did not respond. Implement backend or switch to user-provided keys for demos.");
+      return;
+    }
+  }
+
+  if(config.rememberKeysThisSession){
+    sessionStorage.setItem("ubuntuEduAIKeys", JSON.stringify({
+      openaiKey: config.openaiKey||"",
+      anthropicKey: config.anthropicKey||"",
+      googleKey: config.googleKey||""
+    }));
+  }
+
+  persistNonSensitiveConfig();
+  unlockChat();
+  closeSettings();
+  if(conversations.length===0) startNewChat();
+  updateLivePanelBadges();
+}
+
+function unlockChat(){
+  $("composerInput").disabled = false;
+  $("sendBtn").disabled = false;
+
+  updateApiModeUI();
+  updateStatus(true, config.apiMode==="server" ? "Server mode" : "Client mode");
+
+  if(conversationHistory.length===0){
+    const greeting =
+`Hello. I am UbuntuEduAI.
+Context: ${config.country || "Not specified"}${config.state ? " ("+config.state+")" : ""}${config.region ? ", "+config.region : ""}${config.town ? ", "+config.town : ""}.
+Curriculum: ${config.curriculum || config.customCurriculum || "Not specified"}.
+Output language: ${config.outLang || "English"}.
+How would you like to begin? Choose a category from Quick access, or describe your goal in one sentence.`;
+    addBubble("assistant", greeting, "text", false);
+    speak(greeting);
+    appendCaptions("UbuntuEduAI: Hello. How would you like to begin?");
+  }
+}
+
+/* -----------------------------
+   Providers (client mode)
+------------------------------ */
+async function callOpenAI(system, messages, modelValue){
+  const mapped = { "openai:gpt-4.1":"gpt-4.1", "openai:gpt-4o-mini":"gpt-4o-mini" };
+  const model = mapped[modelValue] || "gpt-4o-mini";
+
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "Authorization":`Bearer ${config.openaiKey}` },
+    body: JSON.stringify({
+      model,
+      messages: [{ role:"system", content: system }, ...messages],
+      temperature: 0.6,
+      max_tokens: 900
+    })
+  });
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data?.error?.message || "OpenAI request failed");
+  return data?.choices?.[0]?.message?.content || "";
+}
+
+async function callAnthropic(system, messages, modelValue){
+  const modelMap = {
+    "anthropic:claude-sonnet":"claude-sonnet-4-20250514",
+    "anthropic:claude-opus":"claude-opus-4-20250514"
+  };
+  const model = modelMap[modelValue] || modelMap["anthropic:claude-sonnet"];
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "x-api-key":config.anthropicKey, "anthropic-version":"2023-06-01" },
+    body: JSON.stringify({ model, max_tokens:900, system, messages })
+  });
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data?.error?.message || "Anthropic request failed");
+  return data?.content?.[0]?.text || "";
+}
+
+async function callGoogle(system, messages){
+  const packed = system + "\n\n" + messages.map(m=>`${m.role}: ${m.content}`).join("\n\n");
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${config.googleKey}`;
+
+  const res = await fetch(url, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ contents: [{ parts: [{ text: packed }] }] })
+  });
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data?.error?.message || "Google request failed");
+  return data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+}
+
+async function generateImageClient(prompt){
+  const res = await fetch("https://api.openai.com/v1/images/generations", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json", "Authorization":`Bearer ${config.openaiKey}` },
+    body: JSON.stringify({ model:"gpt-image-1", prompt:`Create an educational image. ${prompt}`, size:"1024x1024" })
+  });
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data?.error?.message || "Image generation failed");
+  const url = data?.data?.[0]?.url;
+  if(url) return url;
+  const b64 = data?.data?.[0]?.b64_json;
+  if(b64) return `data:image/png;base64,${b64}`;
+  throw new Error("No image returned");
+}
+
+/* -----------------------------
+   Server calls
+------------------------------ */
+async function pingChatServer(model, system, messages){
+  const res = await fetch("/api/chat", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ model, system, messages })
+  });
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || "Server chat request failed");
+  return data.text || "";
+}
+
+async function chatStreamServer(model, system, messages, bubble){
+  const res = await fetch("/api/chat/stream", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ model, system, messages })
+  });
+  if(!res.ok || !res.body) throw new Error("Live mode requires /api/chat/stream on your server.");
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let buf = "";
+  let assembled = "";
+
+  while(true){
+    const { value, done } = await reader.read();
+    if(done) break;
+    buf += decoder.decode(value, { stream:true });
+
+    let idx;
+    while((idx = buf.indexOf("\n")) >= 0){
+      const line = buf.slice(0, idx).trim();
+      buf = buf.slice(idx + 1);
+      if(!line.startsWith("data:")) continue;
+      const payload = line.slice(5).trim();
+      if(payload === "[DONE]"){ buf=""; break; }
+
+      try{
+        const obj = JSON.parse(payload);
+        const delta = obj.delta || "";
+        if(delta){
+          assembled += delta;
+          bubble.innerHTML = escapeHtml(assembled).replace(/\n/g,"<br/>");
+          $("chatMessages").scrollTop = $("chatMessages").scrollHeight;
+        }
+      }catch(_){}
+    }
+  }
+  return assembled;
+}
+
+async function generateVideoServer(prompt){
+  const res = await fetch("/api/video", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ prompt })
+  });
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || "Server video request failed (implement /api/video).");
+  return data.url;
+}
+
+/* -----------------------------
+   Send message
+------------------------------ */
+async function sendMessage(forceText){
+  const input = $("composerInput");
+  const text = (typeof forceText === "string" ? forceText : input.value).trim();
+  if(!text) return;
+
+  $("welcomeScreen").style.display = "none";
+
+  if(voiceMode) stopListening();
+
+  let display = text;
+  if(attachedFiles.length>0) display += `\n\nAttached files: ${attachedFiles.map(f=>f.name).join(", ")}`;
+  addBubble("user", display, "text", false);
+  appendCaptions("You: " + text);
+
+  input.value = "";
+  showTyping(true);
+  voiceBusy = true;
+
+  try{
+    if(videoMode){
+      const url = await handleVideoGeneration(text);
+      showTyping(false);
+      addBubble("assistant", url, "video", false);
+      const follow = "If you want, share grade level, duration (seconds), and language(s) so I can refine the video prompt.";
+      addBubble("assistant", follow, "text", false);
+      speak("Video generated. Share grade level, duration, and language to refine it.");
+      appendCaptions("UbuntuEduAI: Video generated.");
+    } else if(imageMode){
+      const url = await handleImageGeneration(text);
+      showTyping(false);
+      addBubble("assistant", url, "image", false);
+      const follow = "If you want a variation, tell me the grade level and what should be simpler or more detailed.";
+      addBubble("assistant", follow, "text", false);
+      speak(follow);
+      appendCaptions("UbuntuEduAI: Image generated.");
+    }else{
+      const reply = await handleChat(text);
+      showTyping(false);
+      addBubble("assistant", reply, "text", false);
+      appendCaptions("UbuntuEduAI: " + reply);
+      speak(reply);
+    }
+  }catch(err){
+    showTyping(false);
+    addBubble("assistant", `Error: ${err.message}`, "text", false);
+    appendCaptions("UbuntuEduAI: Error.");
+  }finally{
+    voiceBusy = false;
+    attachedFiles = [];
+    renderAttachments();
+    updateLivePanelBadges();
+
+    if(voiceMode && config.stt && !dictationPaused) startListening();
+  }
+}
+
+async function handleChat(userText){
+  const sys = buildSystemPrompt();
+  const model = $("modelSelect").value;
+
+  const localNote = config.localFiles.length ? `\n\n[Reference files available: ${config.localFiles.map(f=>f.name).join(", ")}]` : "";
+  const fileNote = attachedFiles.length ? `\n\n[User attached: ${attachedFiles.map(f=>f.name).join(", ")}]` : "";
+  const full = userText + fileNote + localNote;
+
+  conversationHistory.push({ role:"user", content: full, type:"text" });
+
+  let reply = "";
+  if(config.apiMode==="server"){
+    if(streamMode){
+      const bubble = addAssistantPlaceholder();
+      reply = await chatStreamServer(model, sys, conversationHistory, bubble);
+    }else{
+      reply = await pingChatServer(model, sys, conversationHistory);
+    }
+  }else{
+    if(model.startsWith("anthropic:")){
+      if(!config.anthropicKey) throw new Error("Anthropic key missing");
+      reply = await callAnthropic(sys, conversationHistory, model);
+    }else if(model.startsWith("google:")){
+      if(!config.googleKey) throw new Error("Google key missing");
+      reply = await callGoogle(sys, conversationHistory);
+    }else{
+      if(!config.openaiKey) throw new Error("OpenAI key missing");
+      reply = await callOpenAI(sys, conversationHistory, model);
+    }
+  }
+
+  conversationHistory.push({ role:"assistant", content: reply, type:"text" });
+  updateActiveConversationMeta();
+  renderConversations();
+  return reply;
+}
+
+async function handleImageGeneration(prompt){
+  if(config.apiMode==="server"){
+    const res = await fetch("/api/image", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ prompt })
+    });
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error || "Server image request failed");
+    return data.url;
+  }
+  if(!config.openaiKey) throw new Error("OpenAI key required for image generation in client mode");
+  return await generateImageClient(prompt);
+}
+async function handleVideoGeneration(prompt){
+  if(config.apiMode==="server") return await generateVideoServer(prompt);
+  throw new Error("Video mode is available in server mode only (implement /api/video).");
+}
+
+/* Keyboard send */
+$("composerInput").addEventListener("keydown",(e)=>{
+  if(e.key==="Enter" && !e.shiftKey){
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+/* -----------------------------
+   Voice (STT + TTS) using Web Speech API
+   - Adds natural pauses for TTS
+   - Adds pause/resume controls for dictation and voice
+------------------------------ */
+function initSpeechRecognition(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return null;
+  const r = new SR();
+  r.continuous = true;
+  r.interimResults = true;
+  r.lang = config.sttLang || "en-US";
+  return r;
+}
+
+/* TTS queue with sentence pauses */
+let ttsQueue = [];
+let ttsSpeaking = false;
+
+function splitIntoSpeechChunks(text){
+  const cleaned = String(text || "").replace(/\s+/g," ").trim();
+  if(!cleaned) return [];
+  const parts = cleaned
+    .split(/(?<=[.!?])\s+/)
+    .map(s=>s.trim())
+    .filter(Boolean);
+
+  // Keep chunks reasonably sized for Web Speech stability
+  const chunks = [];
+  for(const p of parts){
+    if(p.length <= 220){
+      chunks.push(p);
+    }else{
+      // soft wrap long sentences
+      let start = 0;
+      while(start < p.length){
+        chunks.push(p.slice(start, start + 220));
+        start += 220;
+      }
+    }
+  }
+  return chunks;
+}
+
+function isVoicePaused(){
+  if(!("speechSynthesis" in window)) return false;
+  try{ return speechSynthesis.paused; }catch(_){ return false; }
+}
+
+function toggleVoicePause(){
+  if(!("speechSynthesis" in window)) return;
+  try{
+    if(speechSynthesis.speaking){
+      if(speechSynthesis.paused) speechSynthesis.resume();
+      else speechSynthesis.pause();
+    }
+  }catch(_){}
+  updateLivePanelBadges();
+}
+
+function speak(text){
+  if(!config.tts) return;
+  if(!("speechSynthesis" in window)) return;
+
+  const chunks = splitIntoSpeechChunks(text);
+  if(chunks.length===0) return;
+
+  try{
+    // Replace queue with the newest response (ChatGPT-like)
+    speechSynthesis.cancel();
+    ttsQueue = chunks.slice();
+    ttsSpeaking = false;
+    playNextTTSChunk();
+  }catch(_){}
+}
+
+function playNextTTSChunk(){
+  if(!config.tts) return;
+  if(!("speechSynthesis" in window)) return;
+  if(ttsQueue.length===0){ ttsSpeaking = false; updateLivePanelBadges(); return; }
+  ttsSpeaking = true;
+
+  const chunk = ttsQueue.shift();
+  const u = new SpeechSynthesisUtterance(chunk);
+  u.rate = 1;
+  u.pitch = 1;
+
+  u.onend = () => {
+    const pause = clamp(config.ttsPauseMs ?? 180, 0, 1500);
+    setTimeout(()=>playNextTTSChunk(), pause);
+  };
+  u.onerror = () => {
+    // Drop remaining queue on error to avoid stuck state
+    ttsQueue = [];
+    ttsSpeaking = false;
+    updateLivePanelBadges();
+  };
+
+  try{
+    speechSynthesis.speak(u);
+  }catch(_){
+    ttsQueue = [];
+    ttsSpeaking = false;
+  }
+  updateLivePanelBadges();
+}
+
+function stopSpeaking(){
+  if(!("speechSynthesis" in window)) return;
+  try{ speechSynthesis.cancel(); }catch(_){}
+  ttsQueue = [];
+  ttsSpeaking = false;
+  updateLivePanelBadges();
+}
+
+function toggleVoiceMode(){
+  voiceMode = !voiceMode;
+  $("voiceBadge").style.display = voiceMode ? "inline-flex" : "none";
+  $("voiceModeBtn").classList.toggle("on", voiceMode);
+  $("voiceModeBtn").textContent = voiceMode ? "Voice mode: On" : "Voice mode";
+
+  if(voiceMode){
+    if(!config.stt) config.stt = true;
+    if(!config.tts) config.tts = true;
+    dictationPaused = false;
+    persistNonSensitiveConfig();
+    startListening();
+  }else{
+    stopListening();
+    stopSpeaking();
+  }
+  updateLivePanelBadges();
+}
+
+function startListening(){
+  if(!voiceMode) return;
+  if(voiceBusy) return;
+  if(dictationPaused) return;
+  if(!config.stt){
+    alert("Enable Dictation (STT) to use voice mode.");
+    voiceMode = false;
+    $("voiceBadge").style.display = "none";
+    updateLivePanelBadges();
+    return;
+  }
+  if(!recognition) recognition = initSpeechRecognition();
+  if(!recognition){
+    alert("Speech recognition is not available in this browser. Use Chrome on desktop, or type instead.");
+    voiceMode = false;
+    $("voiceBadge").style.display = "none";
+    updateLivePanelBadges();
+    return;
+  }
+
+  recognition.lang = config.sttLang || "en-US";
+
+  recognition.onresult = (event)=>{
+    let interim = "";
+    let finalText = "";
+    for(let i=event.resultIndex; i<event.results.length; i++){
+      const res = event.results[i];
+      const chunk = res[0]?.transcript || "";
+      if(res.isFinal) finalText += chunk;
+      else interim += chunk;
+    }
+
+    const combined = (pendingAutoSend + " " + finalText + " " + interim).replace(/\s+/g," ").trim();
+    if(combined){
+      $("composerInput").value = combined;
+    }
+
+    if(finalText && finalText.trim()){
+      pendingAutoSend = (pendingAutoSend + " " + finalText).replace(/\s+/g," ").trim();
+      appendCaptions("You (dictation): " + finalText.trim());
+      scheduleAutoSend();
+    }
+  };
+
+  recognition.onerror = (_)=>{
+    stopListening(true);
+  };
+
+  recognition.onend = ()=>{
+    isListening = false;
+    updateLivePanelBadges();
+    if(voiceMode && !voiceBusy && !dictationPaused){
+      try{ recognition.start(); isListening = true; }catch(_){}
+      updateLivePanelBadges();
+    }
+  };
+
+  try{
+    recognition.start();
+    isListening = true;
+    updateLivePanelBadges();
+  }catch(_){}
+}
+
+function stopListening(silent){
+  if(autoSendTimer){ clearTimeout(autoSendTimer); autoSendTimer = null; }
+  try{
+    if(recognition) recognition.stop();
+  }catch(_){}
+  isListening = false;
+  updateLivePanelBadges();
+  if(!silent) appendCaptions("System: Dictation stopped.");
+}
+
+function scheduleAutoSend(){
+  if(autoSendTimer) clearTimeout(autoSendTimer);
+  const delay = clamp(config.autoSendDelayMs ?? 1200, 400, 4000);
+  autoSendTimer = setTimeout(()=>{
+    if(!voiceMode) return;
+    const text = (pendingAutoSend || "").trim();
+    pendingAutoSend = "";
+    if(text) sendMessage(text);
+  }, delay);
+}
+
+/* -----------------------------
+   Clear + export
+------------------------------ */
+function clearChat(){
+  conversationHistory = [];
+  updateActiveConversationMeta();
+  renderConversations();
+  renderChat();
+  $("welcomeScreen").style.display = "block";
+}
+
+function exportChat(){
+  const lines = [];
+  lines.push(`UbuntuEduAI Chat Export`);
+  lines.push(`Date: ${new Date().toISOString()}`);
+  lines.push(`Country: ${config.country || "Not specified"}`);
+  lines.push(`State: ${config.state || "Not specified"}`);
+  lines.push(`Region: ${config.region || "Not specified"}`);
+  lines.push(`Town: ${config.town || "Not specified"}`);
+  lines.push(`Curriculum: ${config.curriculum || config.customCurriculum || "Not specified"}`);
+  lines.push(`Subjects: ${config.subjects || "Not specified"}`);
+  lines.push(`Output language: ${config.outLang || "English"}`);
+  lines.push(`---`);
+
+  conversationHistory.forEach(m=>{
+    const who = m.role==="user" ? "You" : "UbuntuEduAI";
+    if(m.type==="html"){
+      lines.push(`${who}: [UI actions]`);
+      lines.push("");
+      return;
+    }
+    lines.push(`${who}: ${m.content}`);
+    lines.push("");
+  });
+
+  const blob = new Blob([lines.join("\n")], { type:"text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ubuntuEduAI_chat_${Date.now()}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* -----------------------------
+   Init
+------------------------------ */
+function init(){
+  loadSavedConfig();
+
+  setTheme(config.theme);
+
+  document.body.classList.toggle("large", !!config.largeText);
+  document.body.classList.toggle("reduce", !!config.reduceMotion);
+
+  $("largeTextToggle").classList.toggle("on", !!config.largeText);
+  $("reduceMotionToggle").classList.toggle("on", !!config.reduceMotion);
+  $("captionsToggle").classList.toggle("on", !!config.showCaptions);
+  $("signFriendlyToggle").classList.toggle("on", !!config.signFriendly);
+  $("sessionKeysToggle").classList.toggle("on", !!config.rememberKeysThisSession);
+
+  $("countryInput").value = config.country || "";
+  $("stateInput").value = config.state || "";
+  $("regionInput").value = config.region || "";
+  $("townInput").value = config.town || "";
+  $("curriculumSelect").value = config.curriculum || "";
+  $("customCurriculumInput").value = config.customCurriculum || "";
+  $("subjectsInput").value = config.subjects || "";
+
+  $("autoSendDelayInput").value = String(config.autoSendDelayMs ?? 1200);
+  $("ttsPauseMsInput").value = String(config.ttsPauseMs ?? 180);
+  $("sttLangInput").value = config.sttLang || "en-US";
+
+  $("languageOther").value = config.languageOther || "";
+  const known = Array.from($("languageOutput").options).map(o=>o.value);
+  if(known.includes(config.outLang)) $("languageOutput").value = config.outLang;
+  else $("languageOutput").value = "Other";
+  syncLanguageOtherUI();
+
+  updateApiModeUI();
+
+  renderLibraryTables();
+  renderCategoryList();
+
+  if(window.innerWidth > 860){
+    $("leftPanel").classList.toggle("collapsed", sidebarCollapsed);
+    $("sidebarBtn").textContent = sidebarCollapsed ? "☰ Sidebar" : "⟨ Hide";
+  }else{
+    $("sidebarBtn").style.display = "none";
+  }
+
+  const configured = (config.apiMode==="client")
+    ? !!(config.openaiKey || config.anthropicKey || config.googleKey)
+    : true;
+
+  if(configured && localStorage.getItem("ubuntuEduAIConfig")){
+    $("composerInput").disabled = false;
+    $("sendBtn").disabled = false;
+    updateStatus(true, config.apiMode==="server" ? "Server mode" : "Client mode");
+  }
+
+  refreshComposerMode();
+  updateLivePanelBadges();
+
+  startNewChat();
+}
+
+window.addEventListener("resize", ()=>{
+  if(window.innerWidth > 860){
+    $("scrim").classList.remove("on");
+    $("leftPanel").classList.remove("mobileOpen");
+    $("sidebarBtn").style.display = "inline-flex";
+    $("leftPanel").classList.toggle("collapsed", sidebarCollapsed);
+    $("sidebarBtn").textContent = sidebarCollapsed ? "☰ Sidebar" : "⟨ Hide";
+  }else{
+    $("sidebarBtn").style.display = "none";
+    $("leftPanel").classList.remove("collapsed");
+  }
+});
+
+init();
+</script>
+</body>
+</html>
